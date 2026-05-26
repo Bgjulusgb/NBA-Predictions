@@ -1,0 +1,159 @@
+{
+  "generated_at": "2026-05-25T19:42:33.902184+00:00",
+  "mode": "pre",
+  "game": {
+    "id": "401873344",
+    "name": "NY @ CLE",
+    "date": "2026-05-26T00:00Z",
+    "state": "pre",
+    "detail": "Mon, May 25th at 8:00 PM EDT",
+    "completed": false,
+    "period": 0,
+    "clock": "0.0",
+    "home": {
+      "name": "Cleveland Cavaliers",
+      "abbr": "CLE",
+      "score": 0,
+      "record": "52-30"
+    },
+    "away": {
+      "name": "New York Knicks",
+      "abbr": "NY",
+      "score": 0,
+      "record": "53-29"
+    },
+    "odds": {
+      "provider": "DraftKings",
+      "details": "NY -2.5",
+      "over_under": 218.5,
+      "spread": 2.5,
+      "home_moneyline": 114,
+      "away_moneyline": -135,
+      "home_favorite": false,
+      "away_favorite": true
+    },
+    "leaders": [
+      {
+        "team": "CLE",
+        "category": "pointsPerGame",
+        "name": "D. Mitchell",
+        "value": "27.9"
+      },
+      {
+        "team": "CLE",
+        "category": "reboundsPerGame",
+        "name": "E. Mobley",
+        "value": "9.0"
+      },
+      {
+        "team": "CLE",
+        "category": "assistsPerGame",
+        "name": "D. Mitchell",
+        "value": "5.7"
+      },
+      {
+        "team": "CLE",
+        "category": "rating",
+        "name": "D. Mitchell",
+        "value": "27.9 PPG, 4.5 RPG, 5.7 APG, 1.5 SPG, 0.3 BPG"
+      },
+      {
+        "team": "NY",
+        "category": "pointsPerGame",
+        "name": "J. Brunson",
+        "value": "26.0"
+      },
+      {
+        "team": "NY",
+        "category": "reboundsPerGame",
+        "name": "K. Towns",
+        "value": "11.9"
+      },
+      {
+        "team": "NY",
+        "category": "assistsPerGame",
+        "name": "J. Brunson",
+        "value": "6.8"
+      },
+      {
+        "team": "NY",
+        "category": "rating",
+        "name": "J. Brunson",
+        "value": "26.0 PPG, 3.3 RPG, 6.8 APG, 0.8 SPG, 0.1 BPG"
+      }
+    ]
+  },
+  "scores_unified": {
+    "home_scores": [
+      [
+        "espn",
+        0
+      ]
+    ],
+    "away_scores": [
+      [
+        "espn",
+        0
+      ]
+    ],
+    "consensus_home": 0,
+    "consensus_away": 0,
+    "max_disagreement": 0,
+    "n_sources": 1
+  },
+  "live": {
+    "current_run": {
+      "team": null,
+      "points": 0
+    },
+    "momentum": 0.0,
+    "composite_momentum": {
+      "value": 0.0571,
+      "weight_total": 0.8,
+      "components": {
+        "scoring": {
+          "raw": 0.0,
+          "norm": 0,
+          "weight": 0.4
+        },
+        "run": {
+          "raw": 0,
+          "norm": 0.0,
+          "weight": 0.25
+        },
+        "sentiment": {
+          "raw": 0.629,
+          "norm": 0.3045,
+          "weight": 0.15
+        }
+      }
+    },
+    "win_probability": {
+      "home": 0.4215,
+      "away": 0.5785,
+      "pregame_home": 0.4215
+    },
+    "sentiment_spike": 0.629,
+    "mood": {
+      "heat": 97.5,
+      "hype": 100.0,
+      "toxicity": 5.2,
+      "volume": 94,
+      "engagement": 170011,
+      "mean_sentiment": 0.2234,
+      "sentiment_variance": 0.193
+    },
+    "team_sentiment": {
+      "home": 0.1892,
+      "away": 0.1859,
+      "count_home": 23,
+      "count_away": 27
+    },
+    "score_timeline": [],
+    "recent_events": [],
+    "pbp_status": "partial",
+    "sofa_inc_status": "skipped",
+    "social_status": "ok"
+  },
+  "alerts": []
+}

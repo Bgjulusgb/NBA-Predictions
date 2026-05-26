@@ -1,0 +1,30 @@
+{
+  "game": {
+    "id": "fixture-g4",
+    "name": "NY @ CLE",
+    "state": "in",
+    "detail": "Q3 4:12",
+    "completed": false,
+    "period": 3,
+    "clock": "4:12",
+    "home": {"name": "Cleveland Cavaliers", "abbr": "CLE", "score": 71},
+    "away": {"name": "New York Knicks", "abbr": "NYK", "score": 81}
+  },
+  "events": [
+    {"team": "CLE", "points": 2, "scoring": true, "score_home": 61, "score_away": 71, "period": 3, "clock": "8:30", "desc": "Mobley layup"},
+    {"team": "NYK", "points": 3, "scoring": true, "score_home": 61, "score_away": 74, "period": 3, "clock": "8:02", "desc": "Brunson 3PT"},
+    {"team": "CLE", "points": 2, "scoring": true, "score_home": 63, "score_away": 74, "period": 3, "clock": "7:40", "desc": "Mitchell jumper"},
+    {"team": "NYK", "points": 2, "scoring": true, "score_home": 63, "score_away": 76, "period": 3, "clock": "7:01", "desc": "Towns dunk"},
+    {"team": "NYK", "points": 2, "scoring": true, "score_home": 63, "score_away": 78, "period": 3, "clock": "6:20", "desc": "Anunoby layup"},
+    {"team": "NYK", "points": 3, "scoring": true, "score_home": 63, "score_away": 81, "period": 3, "clock": "5:30", "desc": "Hart 3PT"},
+    {"team": "NYK", "points": 0, "scoring": false, "score_home": 63, "score_away": 81, "period": 3, "clock": "5:05", "desc": "Knicks steal"}
+  ],
+  "social": [
+    {"kind": "social", "team": "home", "engagement": 40, "published": "2026-05-26T01:40:00+00:00", "sentiment": {"compound": 0.3, "pos": 0.4, "neg": 0.1, "neu": 0.5, "toxicity": 0.0}},
+    {"kind": "social", "team": "away", "engagement": 55, "published": "2026-05-26T01:41:00+00:00", "sentiment": {"compound": 0.5, "pos": 0.6, "neg": 0.0, "neu": 0.4, "toxicity": 0.0}},
+    {"kind": "social", "team": "home", "engagement": 30, "published": "2026-05-26T01:46:00+00:00", "sentiment": {"compound": 0.1, "pos": 0.2, "neg": 0.1, "neu": 0.7, "toxicity": 0.0}},
+    {"kind": "social", "team": "home", "engagement": 60, "published": "2026-05-26T01:47:00+00:00", "sentiment": {"compound": -0.2, "pos": 0.1, "neg": 0.3, "neu": 0.6, "toxicity": 0.1}},
+    {"kind": "social", "team": "home", "engagement": 120, "published": "2026-05-26T01:58:00+00:00", "sentiment": {"compound": -0.85, "pos": 0.0, "neg": 0.8, "neu": 0.2, "toxicity": 0.6}},
+    {"kind": "social", "team": "home", "engagement": 140, "published": "2026-05-26T01:59:00+00:00", "sentiment": {"compound": -0.9, "pos": 0.0, "neg": 0.85, "neu": 0.15, "toxicity": 0.7}}
+  ]
+}

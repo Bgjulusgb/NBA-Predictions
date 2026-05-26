@@ -1,0 +1,8 @@
+[
+  {"game": "ECF G1 NYK@CLE", "prob_home": 0.46, "home_won": 0},
+  {"game": "ECF G2 NYK@CLE", "prob_home": 0.44, "home_won": 0},
+  {"game": "ECF G3 CLE@NYK", "prob_home": 0.58, "home_won": 1},
+  {"game": "WCF G1 OKC@SAS", "prob_home": 0.55, "home_won": 1},
+  {"game": "WCF G2 OKC@SAS", "prob_home": 0.52, "home_won": 0},
+  {"game": "WCF G3 SAS@OKC", "prob_home": 0.61, "home_won": 1}
+]
