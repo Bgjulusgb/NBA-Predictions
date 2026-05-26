@@ -1,0 +1,60 @@
+# NBA Mood Mirror / Football Predicter - Requirements
+# Alle Module aus dem Code (Python 3.8+ Standard Library)
+
+# STDLIB MODULES USED IN CODE:
+# re                          - Regular expressions (sentiment, parsing)
+# math                        - Mathematical operations (Elo, probabilities)
+# os                          - Operating system (file paths, env)
+# json                        - JSON parsing & serialization
+# datetime                    - Date/time handling
+# time                        - Time operations (polling, delays)
+# concurrent.futures          - ThreadPoolExecutor (parallel fetching)
+# gzip                        - Compression (HTTP gzip)
+# io                          - I/O operations
+# urllib.request              - HTTP requests
+# urllib.error                - HTTP error handling
+# urllib.parse                - URL parsing
+# statistics                  - Statistical calculations
+# random                      - PRNG for Monte Carlo / bootstrap
+# xml.etree.ElementTree       - RSS parsing
+# email.utils                 - Date parsing from RSS
+# hashlib                     - Hashing (article deduplication)
+# argparse                    - CLI argument parsing
+# sys                         - System operations
+# tempfile                    - Temporary files (testing)
+# unittest                    - Unit testing framework
+# typing                      - Type hints (advanced math modules)
+# curses                      - Interactive TUI (tui.py)
+# shutil                      - Terminal width detection (cli_dashboard.py)
+# collections                 - Counter / defaultdict (injury_impact)
+
+# NO EXTERNAL DEPENDENCIES REQUIRED - ALL STDLIB
+# Das Projekt benötigt KEINE pip-Module, alles kommt aus der Python Standard Library
+
+# Mathematik-Module (alle pure-Python, im Backend implementiert):
+#   backend/model.py             - Elo, log5, odds devig, ensemble, live WP
+#   backend/advanced_math.py     - Bayes, Poisson/Skellam, Glicko-2, regression,
+#                                  Monte Carlo, Kelly, Sharpe, four factors,
+#                                  Pearson/Spearman, bootstrap, KL/JS,
+#                                  Markov chains, EWMA/SMA/WMA, percentile,
+#                                  skewness/kurtosis, Holt smoothing
+#   backend/simulation.py        - MC game / series / possession / alt-lines /
+#                                  what-if injury simulator
+#   backend/player_stats.py      - eFG, TS%, USG, PER, Game Score, BPM-lite
+#   backend/streaks.py           - W/L, scoring, lead-change, sentiment streaks
+#   backend/odds_compare.py      - Best price, arbitrage, no-vig consensus, CLV
+#   backend/clutch_analysis.py   - Clutch-time aggregation
+#   backend/injury_impact.py     - Press injury signal -> WP adjustment
+#   backend/backtest.py          - Brier, log-loss, skill score
+#
+# UI-Module:
+#   backend/cli_dashboard.py     - ANSI-coloured CLI dashboard (Mood/Press/...)
+#   backend/tui.py               - Interactive curses TUI (7 tabs)
+#   index.html                   - React + Recharts web dashboard (existing)
+
+# Optional: Development Tools (nicht erforderlich)
+# black>=24.1.1              # Code formatting
+# flake8>=7.0.0              # Linting
+# pylint>=3.0.3              # Static analysis
+# pytest>=7.4.4              # Alternative test runner
+# pytest-cov>=4.1.0          # Test coverage

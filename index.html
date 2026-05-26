@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Mood Mirror &amp; Press Review</title>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.2.0/Recharts.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Monochrome brutalist theme: black + white, hard edges, no curves. */
+        :root {
+            --ink:#0a0a0a; --paper:#ffffff; --paper2:#f2f2f2;
+            --line:#0a0a0a; --muted:#6a6a6a; --hair:#d6d6d6;
+            --shadow:6px 6px 0 #0a0a0a;
+            --mono:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;
+            --sans:'Arial Black','Helvetica Neue',Helvetica,Arial,sans-serif;
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body {
+            font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
+            line-height:1.55; background:var(--paper); color:var(--ink);
+            -webkit-font-smoothing:antialiased;
+        }
+        .App { max-width:1180px; margin:0 auto; padding:22px; }
+        .header {
+            margin-bottom:18px; padding:30px 26px; background:var(--ink);
+            color:var(--paper); border:3px solid var(--ink); box-shadow:var(--shadow);
+        }
+        .header h1 { font-family:var(--sans); font-size:2.5rem; line-height:1.05;
+            text-transform:uppercase; letter-spacing:-1px; }
+        .header p { font-size:1rem; opacity:0.85; margin-top:8px;
+            text-transform:uppercase; letter-spacing:2px; font-size:0.8rem; }
+        .toolbar { display:flex; justify-content:flex-start; align-items:center;
+            gap:10px; margin-top:18px; flex-wrap:wrap; }
+        .pill { background:transparent; color:var(--paper); padding:5px 12px;
+            border:2px solid var(--paper); font-size:0.72rem; font-weight:700;
+            text-transform:uppercase; letter-spacing:1px; }
+        .stat-card { background:var(--paper); padding:20px; border:3px solid var(--line);
+            box-shadow:var(--shadow); transition:transform .15s, box-shadow .15s; }
+        .stat-card:hover { transform:translate(-2px,-2px); box-shadow:8px 8px 0 #0a0a0a; }
+        .stat-card h3 { font-family:var(--sans); margin-bottom:14px;
+            border-bottom:3px solid var(--ink); padding-bottom:8px; font-size:0.95rem;
+            text-transform:uppercase; letter-spacing:0.5px; }
+        .stats-grid { display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+            gap:18px; margin:18px 0; }
+        .chart-container { background:var(--paper); padding:20px; border:3px solid var(--line);
+            margin:18px 0; box-shadow:var(--shadow); overflow:hidden; }
+        .chart-container h2 { margin-bottom:16px; font-family:var(--sans);
+            border-bottom:3px solid var(--ink); padding-bottom:10px; font-size:1.05rem;
+            text-transform:uppercase; letter-spacing:0.5px; }
+        .match-header { margin-bottom:18px; background:var(--paper); padding:20px;
+            border:3px solid var(--line); box-shadow:var(--shadow);
+            display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+        .match-teams { display:flex; align-items:center; gap:18px; }
+        .team-logo { width:56px; height:56px; border:3px solid var(--ink);
+            display:flex; align-items:center; justify-content:center;
+            font-family:var(--sans); font-size:1rem; }
+        .logo-home { background:var(--ink); color:var(--paper); }
+        .logo-away { background:var(--paper); color:var(--ink); }
+        .team-block { text-align:center; }
+        .team-score { font-family:var(--mono); font-size:1.8rem; font-weight:700; }
+        .vs { font-family:var(--mono); font-size:0.85rem; color:var(--muted);
+            text-transform:uppercase; letter-spacing:1px; }
+        .match-info { text-align:right; }
+        .match-date { font-weight:700; text-transform:uppercase; letter-spacing:0.5px; }
+        .tabs { display:flex; margin-bottom:18px; border:3px solid var(--line);
+            box-shadow:var(--shadow); }
+        .tab { padding:15px 16px; cursor:pointer; background:var(--paper); border:none;
+            border-right:3px solid var(--line); flex:1; text-align:center;
+            transition:all .12s; font-weight:800; color:var(--ink); font-size:0.82rem;
+            text-transform:uppercase; letter-spacing:1px; }
+        .tab:last-child { border-right:none; }
+        .tab:hover { background:var(--paper2); }
+        .tab.active { background:var(--ink); color:var(--paper); }
+        .tab .badge-dot { display:inline-block; width:8px; height:8px;
+            background:var(--paper); border:1px solid var(--paper); border-radius:0;
+            margin-left:6px; animation:pulse 1.1s infinite; }
+        @keyframes pulse { 0%{opacity:1;} 50%{opacity:0.2;} 100%{opacity:1;} }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; animation:fadeIn .3s; }
+        @keyframes fadeIn { from {opacity:0; transform:translateY(4px);} to {opacity:1;} }
+        .meter { margin:14px 0; }
+        .meter-label { display:flex; justify-content:space-between; font-weight:700;
+            margin-bottom:5px; font-size:0.82rem; text-transform:uppercase;
+            letter-spacing:0.5px; font-family:var(--mono); }
+        .meter-track { height:16px; background:var(--paper2);
+            border:2px solid var(--ink); overflow:hidden; }
+        .meter-fill { height:100%; background:var(--ink); transition:width .5s; }
+        .big-number { font-family:var(--mono); font-size:2.4rem; font-weight:700;
+            letter-spacing:-1px; }
+        .prob-bar { display:flex; height:46px; border:3px solid var(--ink); overflow:hidden;
+            margin:12px 0; font-weight:800; font-family:var(--mono); }
+        .prob-home { background:var(--ink); color:var(--paper); display:flex;
+            align-items:center; justify-content:flex-start; padding-left:14px; }
+        .prob-away { background:var(--paper); color:var(--ink); display:flex;
+            align-items:center; justify-content:flex-end; padding-right:14px;
+            border-left:3px solid var(--ink); }
+        .article { background:var(--paper); padding:14px 16px; margin-bottom:12px;
+            border:2px solid var(--ink); border-left:8px solid var(--ink); }
+        .article a { color:var(--ink); text-decoration:none; font-weight:700; }
+        .article a:hover { text-decoration:underline; }
+        .article-meta { font-size:0.78rem; color:var(--muted); margin-top:8px;
+            display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+            font-family:var(--mono); text-transform:uppercase; letter-spacing:0.5px; }
+        .sent-badge { padding:2px 9px; font-size:0.72rem; font-weight:800;
+            border:2px solid var(--ink); font-family:var(--mono); }
+        .badge { display:inline-block; padding:3px 9px; font-size:0.72rem;
+            font-weight:800; margin-right:5px; background:var(--paper);
+            border:2px solid var(--ink); color:var(--ink); text-transform:uppercase;
+            font-family:var(--mono); }
+        .form-pill { display:inline-block; width:24px; height:24px; border:2px solid var(--ink);
+            text-align:center; line-height:21px; font-weight:800; margin-right:4px;
+            font-size:0.78rem; font-family:var(--mono); }
+        .pill-w { background:var(--ink); color:var(--paper); }
+        .pill-l { background:var(--paper); color:var(--ink); }
+        .alert-banner { padding:14px 18px; margin-bottom:10px; font-weight:800;
+            display:flex; align-items:center; gap:10px; border:3px solid var(--ink);
+            text-transform:uppercase; letter-spacing:0.5px; }
+        .alert-high { background:var(--ink); color:var(--paper); }
+        .alert-medium { background:var(--paper); color:var(--ink);
+            background-image:repeating-linear-gradient(45deg,#0a0a0a 0 8px,transparent 8px 16px);
+            background-blend-mode:normal; }
+        .alert-medium { background:var(--paper2); }
+        table { width:100%; border-collapse:collapse; font-family:var(--mono);
+            font-size:0.85rem; margin-top:6px; }
+        th, td { padding:8px 10px; text-align:left; border-bottom:2px solid var(--ink); }
+        th { font-family:var(--sans); text-transform:uppercase; font-size:0.72rem;
+            letter-spacing:0.5px; border-bottom:3px solid var(--ink); }
+        .filters { margin-bottom:16px; display:flex; gap:12px; flex-wrap:wrap; }
+        .filter-select, .search-bar { padding:11px 14px; border:3px solid var(--ink);
+            background:var(--paper); font-size:0.9rem; color:var(--ink);
+            font-family:var(--mono); }
+        .search-bar { flex:1; min-width:200px; }
+        .switch { position:relative; display:inline-block; width:54px; height:28px; }
+        .switch input { opacity:0; width:0; height:0; }
+        .slider { position:absolute; cursor:pointer; inset:0; background:transparent;
+            border:2px solid var(--paper); transition:.3s; }
+        .slider:before { position:absolute; content:""; height:18px; width:18px;
+            left:3px; bottom:3px; background:var(--paper); transition:.3s; }
+        input:checked + .slider:before { transform:translateX(26px); }
+        .loading-container { display:flex; justify-content:center; align-items:center;
+            min-height:240px; flex-direction:column; gap:14px; }
+        .loading-spinner { border:5px solid var(--paper2); border-top:5px solid var(--ink);
+            width:46px; height:46px; animation:spin 0.9s linear infinite; }
+        @keyframes spin { 100% { transform:rotate(360deg); } }
+        .error-box { background:var(--paper); border:3px solid var(--ink);
+            color:var(--ink); padding:22px; box-shadow:var(--shadow); }
+        .error-box code { background:var(--ink); color:var(--paper); padding:2px 6px;
+            font-family:var(--mono); }
+        .source-chip { display:inline-block; padding:4px 9px; font-size:0.7rem;
+            font-weight:800; margin:3px; border:2px solid var(--ink);
+            font-family:var(--mono); text-transform:uppercase; }
+        .src-ok { background:var(--ink); color:var(--paper); }
+        .src-partial { background:var(--paper2); color:var(--ink); }
+        .src-error { background:var(--paper); color:var(--ink);
+            border-style:dashed; }
+        .section-title { margin:24px 0 12px; font-family:var(--sans);
+            border-left:8px solid var(--ink); padding-left:12px; text-transform:uppercase; }
+        .live-score { font-family:var(--mono); font-size:3rem; font-weight:700; }
+        /* Dark mode = full invert: flip the palette variables, the base
+           body rule (background:var(--paper); color:var(--ink)) does the rest. */
+        .dark-mode { --ink:#ffffff; --paper:#0a0a0a; --paper2:#1c1c1c;
+            --line:#ffffff; --muted:#9a9a9a; --hair:#333; --shadow:6px 6px 0 #ffffff;
+            background:var(--paper); color:var(--ink); }
+        @media (max-width: 768px) {
+            .tabs { flex-direction:column; }
+            .tab { border-right:none; border-bottom:3px solid var(--line); }
+            .match-header { flex-direction:column; text-align:center; }
+            .match-info { text-align:center; }
+            .header h1 { font-size:1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+const { LineChart, Line, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip,
+        Legend, ResponsiveContainer, PieChart, Pie, Cell } = Recharts;
+
+const SNAPSHOT_REFRESH_MS = 60000;
+const LIVE_REFRESH_MS = 20000;
+
+// ---- helpers (monochrome, theme-aware) ------------------------------------
+let CURRENT_DARK = false;                       // set by App() each render
+function ink() { return CURRENT_DARK ? '#ffffff' : '#0a0a0a'; }
+function paper() { return CURRENT_DARK ? '#0a0a0a' : '#ffffff'; }
+function mute() { return CURRENT_DARK ? '#9a9a9a' : '#6a6a6a'; }
+function awayTone() { return '#9a9a9a'; }       // mid-gray, visible on both bgs
+
+// Sentiment is encoded by ink intensity: dark = positive, faint = negative.
+function sentimentColor(c) {
+    if (c >= 0.35) return ink();
+    if (c <= -0.35) return CURRENT_DARK ? '#3a3a3a' : '#cccccc';
+    return CURRENT_DARK ? '#7d7d7d' : '#808080';
+}
+function inkOn(hex) {                            // pick readable text color
+    const n = parseInt(hex.slice(1), 16);
+    const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    return (0.299 * r + 0.587 * g + 0.114 * b) > 140 ? '#0a0a0a' : '#ffffff';
+}
+function sentimentLabel(c) {
+    if (c >= 0.35) return 'positive';
+    if (c <= -0.35) return 'negative';
+    return 'neutral';
+}
+function meterColor() { return ink(); }
+function fmtPct(p) { return (p * 100).toFixed(1) + '%'; }
+function fmtDate(s) {
+    if (!s) return '';
+    const d = new Date(s);
+    return isNaN(d) ? s : d.toLocaleString('en-US',
+        { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function Meter({ label, value, kind }) {
+    const v = Math.max(0, Math.min(100, value || 0));
+    return (
+        <div className="meter">
+            <div className="meter-label">
+                <span>{label}</span><span>{v.toFixed(0)}/100</span>
+            </div>
+            <div className="meter-track">
+                <div className="meter-fill"
+                    style={{ width: v + '%', background: meterColor(kind, v) }}></div>
+            </div>
+        </div>
+    );
+}
+
+function SourceChips({ sources }) {
+    if (!sources) return null;
+    return (
+        <div style={{ marginTop: '8px' }}>
+            {sources.map(s => (
+                <span key={s.name} className={'source-chip src-' + s.status}
+                    title={s.error || ''}>
+                    {s.name}: {s.status} ({s.count})
+                </span>
+            ))}
+        </div>
+    );
+}
+
+// ---- Mood Mirror tab ------------------------------------------------------
+function MoodTab({ snap }) {
+    const mood = snap.mood || {};
+    const overall = mood.overall || {};
+    const ts = mood.team_sentiment || {};
+    const home = snap.teams.home, away = snap.teams.away;
+    const teamData = [
+        { name: home.abbr, sentiment: (ts.home || 0) },
+        { name: away.abbr, sentiment: (ts.away || 0) },
+    ];
+    const timeline = (mood.timeline || []).map(t => ({
+        date: t.date.slice(5), sentiment: t.mean_sentiment, volume: t.volume }));
+    return (
+        <div>
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <h3><i className="fas fa-fire"></i> Mood Meters (overall)</h3>
+                    <Meter label="Heat Index" value={overall.heat} kind="heat" />
+                    <Meter label="Hype Meter" value={overall.hype} kind="hype" />
+                    <Meter label="Toxicity Meter" value={overall.toxicity} kind="toxicity" />
+                    <p style={{ marginTop: '10px', fontSize: '0.88rem', color: '#888' }}>
+                        Based on {overall.volume || 0} matchup-relevant items ·
+                        mean sentiment {(overall.mean_sentiment || 0).toFixed(2)}
+                    </p>
+                </div>
+                <div className="stat-card">
+                    <h3><i className="fas fa-balance-scale"></i> Team Sentiment</h3>
+                    <div style={{ textAlign: 'center', margin: '10px 0' }}>
+                        <span className="big-number"
+                            style={{ color: sentimentColor(ts.home || 0) }}>
+                            {(ts.home || 0).toFixed(2)}</span>
+                        <div>{home.name} ({ts.count_home || 0} items)</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                        <span className="big-number"
+                            style={{ color: sentimentColor(ts.away || 0) }}>
+                            {(ts.away || 0).toFixed(2)}</span>
+                        <div>{away.name} ({ts.count_away || 0} items)</div>
+                    </div>
+                </div>
+            </div>
+            <div className="chart-container">
+                <h2>Sentiment by Team</h2>
+                <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={teamData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" /><YAxis domain={[-1, 1]} />
+                        <Tooltip /> <Bar dataKey="sentiment">
+                            {teamData.map((e, i) => (
+                                <Cell key={i} fill={sentimentColor(e.sentiment)} />))}
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+            {timeline.length > 1 && (
+                <div className="chart-container">
+                    <h2>Sentiment Timeline (press coverage)</h2>
+                    <ResponsiveContainer width="100%" height={280}>
+                        <LineChart data={timeline}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="date" /><YAxis domain={[-1, 1]} />
+                            <Tooltip /> <Legend />
+                            <Line type="monotone" dataKey="sentiment" name="Mean sentiment"
+                                stroke={ink()} strokeWidth={2} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+            <NarrativeChips narratives={snap.narratives} />
+            <div className="stats-grid">
+                <EmotionsCard emotions={mood.emotions} />
+                <PlayersCard players={snap.players} teams={snap.teams} />
+            </div>
+        </div>
+    );
+}
+
+// ---- Emotion breakdown ----------------------------------------------------
+function EmotionsCard({ emotions }) {
+    if (!emotions) return null;
+    // Monochrome ramp so the five emotions stay distinguishable in B/W.
+    const shades = { joy: ink(), anticipation: '#4a4a4a', fear: '#7a7a7a',
+        sadness: '#a8a8a8', anger: '#cfcfcf' };
+    const data = Object.keys(emotions).map(k => ({
+        emotion: k, value: +(emotions[k] * 100).toFixed(1) }));
+    return (
+        <div className="stat-card">
+            <h3><i className="fas fa-theater-masks"></i> Emotion breakdown</h3>
+            <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={data} layout="vertical"
+                    margin={{ left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" domain={[0, 100]} />
+                    <YAxis type="category" dataKey="emotion" width={90} />
+                    <Tooltip formatter={v => v + '%'} />
+                    <Bar dataKey="value">
+                        {data.map((e, i) => <Cell key={i} fill={shades[e.emotion] || ink()} />)}
+                    </Bar>
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+// ---- Player sentiment -----------------------------------------------------
+function PlayersCard({ players, teams }) {
+    if (!players || players.length === 0) return null;
+    const teamName = t => t === 'home' ? teams.home.abbr : teams.away.abbr;
+    return (
+        <div className="stat-card">
+            <h3><i className="fas fa-users"></i> Player buzz &amp; sentiment</h3>
+            <table style={{ boxShadow: 'none', marginTop: '4px' }}>
+                <thead><tr>
+                    <th>Player</th><th>Team</th><th>Mentions</th><th>Sentiment</th>
+                </tr></thead>
+                <tbody>
+                    {players.slice(0, 8).map(p => (
+                        <tr key={p.name}>
+                            <td>{p.name}</td>
+                            <td>{teamName(p.team)}</td>
+                            <td>{p.mentions}</td>
+                            <td><span className="sent-badge"
+                                style={{ background: sentimentColor(p.mean_sentiment),
+                                    color: inkOn(sentimentColor(p.mean_sentiment)) }}>
+                                {p.mean_sentiment.toFixed(2)}</span></td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+// ---- Narrative tracker ----------------------------------------------------
+function NarrativeChips({ narratives }) {
+    if (!narratives || narratives.length === 0) return null;
+    return (
+        <div className="chart-container">
+            <h2><i className="fas fa-hashtag"></i> Trending narratives</h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {narratives.map(n => (
+                    <span key={n.term} className="badge"
+                        style={{ background: sentimentColor(n.mean_sentiment),
+                            color: inkOn(sentimentColor(n.mean_sentiment)),
+                            fontSize: '0.9rem', padding: '6px 12px' }}>
+                        {n.term} · {n.count}
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// ---- Press Review tab -----------------------------------------------------
+function PressTab({ snap }) {
+    const [query, setQuery] = React.useState('');
+    const [sentFilter, setSentFilter] = React.useState('all');
+    const articles = (snap.press_review || []).filter(a => {
+        if (sentFilter !== 'all' && a.sentiment_label !== sentFilter) return false;
+        if (query && !(a.title || '').toLowerCase().includes(query.toLowerCase())
+            && !(a.outlet || '').toLowerCase().includes(query.toLowerCase()))
+            return false;
+        return true;
+    });
+    return (
+        <div>
+            <div className="filters">
+                <input className="search-bar" placeholder="Search headlines / outlets..."
+                    value={query} onChange={e => setQuery(e.target.value)} />
+                <select className="filter-select" value={sentFilter}
+                    onChange={e => setSentFilter(e.target.value)}>
+                    <option value="all">All sentiment</option>
+                    <option value="positive">Positive</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="negative">Negative</option>
+                </select>
+            </div>
+            <p style={{ color: '#888', marginBottom: '10px' }}>
+                {articles.length} articles · imported directly when enrichment status
+                was "ok" (no second filtering pass)
+            </p>
+            {articles.map(a => (
+                <div className="article" key={a.id}
+                    style={{ borderLeftColor: sentimentColor(a.sentiment.compound) }}>
+                    <a href={a.url} target="_blank" rel="noopener">{a.title}</a>
+                    <div className="article-meta">
+                        <span className="sent-badge"
+                            style={{ background: sentimentColor(a.sentiment.compound),
+                                color: inkOn(sentimentColor(a.sentiment.compound)) }}>
+                            {sentimentLabel(a.sentiment.compound)} ({a.sentiment.compound.toFixed(2)})
+                        </span>
+                        <span><i className="fas fa-newspaper"></i> {a.outlet || a.source}</span>
+                        <span><i className="far fa-clock"></i> {fmtDate(a.published)}</span>
+                        {a.team && a.team !== 'general' &&
+                            <span className="badge">{a.team}</span>}
+                    </div>
+                </div>
+            ))}
+            {articles.length === 0 &&
+                <p style={{ textAlign: 'center', padding: '20px' }}>No articles match.</p>}
+        </div>
+    );
+}
+
+// ---- Prediction tab -------------------------------------------------------
+function PredictionTab({ snap }) {
+    const p = snap.prediction || {};
+    const home = snap.teams.home, away = snap.teams.away;
+    const ens = p.ensemble || { home: 0.5, away: 0.5, components: {} };
+    const market = p.market, elo = p.elo || {}, espn = p.espn_predictor;
+    const compareData = [
+        { model: 'Market (de-vig)', home: market ? market.home : null },
+        { model: 'Elo / log5', home: elo.home },
+        { model: 'ESPN predictor', home: espn ? espn.home : null },
+        { model: 'Ensemble', home: ens.home },
+    ].filter(d => d.home != null).map(d => ({
+        model: d.model, [home.abbr]: +(d.home * 100).toFixed(1),
+        [away.abbr]: +((1 - d.home) * 100).toFixed(1) }));
+    const series = p.series || {};
+    const perGame = (series.per_game || []).map(g => ({
+        game: 'G' + g.game + ' @' + g.venue,
+        'Knicks win %': +(g.leader_win * 100).toFixed(1) }));
+    return (
+        <div>
+            <div className="chart-container">
+                <h2>Ensemble Win Probability</h2>
+                <div className="prob-bar">
+                    <div className="prob-home" style={{ width: fmtPct(ens.home) }}>
+                        {home.abbr} {fmtPct(ens.home)}</div>
+                    <div className="prob-away" style={{ width: fmtPct(ens.away) }}>
+                        {fmtPct(ens.away)} {away.abbr}</div>
+                </div>
+                <p style={{ color: '#888' }}>
+                    Confidence {p.confidence}/100 · blend of market ({W(ens, 'market')}),
+                    Elo ({W(ens, 'elo')}), ESPN ({W(ens, 'espn')}) and a bounded
+                    sentiment nudge ({(ens.components.sentiment_delta * 100 || 0).toFixed(1)} pts)
+                </p>
+            </div>
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <h3>Market (odds, de-vigged)</h3>
+                    {market ? (
+                        <div>
+                            <p><strong>{home.abbr}:</strong> {fmtPct(market.home)}</p>
+                            <p><strong>{away.abbr}:</strong> {fmtPct(market.away)}</p>
+                            <p style={{ color: '#888', fontSize: '0.85rem' }}>
+                                method: {market.method}
+                                {market.margin_pct != null &&
+                                    ' · vig ' + market.margin_pct + '%'}</p>
+                            {snap.game && snap.game.odds &&
+                                <p style={{ fontSize: '0.85rem' }}>
+                                    line: {snap.game.odds.details} · O/U {snap.game.odds.over_under}</p>}
+                        </div>
+                    ) : <p>No odds available.</p>}
+                </div>
+                <div className="stat-card">
+                    <h3>Elo / log5</h3>
+                    <p><strong>{home.abbr}:</strong> {fmtPct(elo.home)}</p>
+                    <p><strong>{away.abbr}:</strong> {fmtPct(elo.away)}</p>
+                    {elo.ratings &&
+                        <p style={{ color: '#888', fontSize: '0.85rem' }}>
+                            ratings — {home.abbr} {elo.ratings.home} ·
+                            {away.abbr} {elo.ratings.away}</p>}
+                </div>
+                <div className="stat-card">
+                    <h3>Series ({series.lead})</h3>
+                    <div style={{ textAlign: 'center' }}>
+                        <span className="big-number" style={{ color: ink() }}>
+                            {fmtPct(series.leader_clinch_probability || 0)}</span>
+                        <div>{series.leader} win the series</div>
+                    </div>
+                </div>
+                <ValueBetCard vb={p.value_bet} teams={snap.teams} />
+                <FormCard game={snap.game} teams={snap.teams} />
+            </div>
+            <div className="chart-container">
+                <h2>Model Comparison (win %)</h2>
+                <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={compareData}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="model" /><YAxis domain={[0, 100]} />
+                        <Tooltip /> <Legend />
+                        <Bar dataKey={home.abbr} fill={ink()} />
+                        <Bar dataKey={away.abbr} fill={awayTone()} />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+            {perGame.length > 0 && (
+                <div className="chart-container">
+                    <h2>Remaining-game win probability ({series.leader})</h2>
+                    <ResponsiveContainer width="100%" height={260}>
+                        <BarChart data={perGame}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="game" /><YAxis domain={[0, 100]} />
+                            <Tooltip /> <Bar dataKey="Knicks win %" fill={ink()} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+            <HistoryChart history={snap.history} teams={snap.teams} />
+        </div>
+    );
+}
+function W(ens, key) {
+    const v = ens.components && ens.components[key];
+    return v != null ? (v * 100).toFixed(0) + '%' : 'n/a';
+}
+
+// ---- Value bet card -------------------------------------------------------
+function ValueBetCard({ vb, teams }) {
+    if (!vb) return <div className="stat-card"><h3>Value vs. market</h3>
+        <p>No odds available.</p></div>;
+    const sideName = vb.side === 'home' ? teams.home.abbr : teams.away.abbr;
+    const color = vb.has_value ? ink() : mute();
+    return (
+        <div className="stat-card">
+            <h3><i className="fas fa-coins"></i> Value vs. market</h3>
+            <div style={{ textAlign: 'center' }}>
+                <span className="big-number" style={{ color }}>
+                    {vb.edge_pct > 0 ? '+' : ''}{vb.edge_pct}%</span>
+                <div>model edge on <strong>{sideName}</strong>
+                    {vb.moneyline != null && ' (' + (vb.moneyline > 0 ? '+' : '') + vb.moneyline + ')'}</div>
+            </div>
+            {vb.expected_value != null &&
+                <p style={{ color: '#888', fontSize: '0.85rem', marginTop: '8px' }}>
+                    expected value: {vb.expected_value > 0 ? '+' : ''}
+                    {(vb.expected_value * 100).toFixed(1)}% per unit ·
+                    {vb.has_value ? ' value detected' : ' no clear edge'}</p>}
+        </div>
+    );
+}
+
+// ---- Recent form & season series -----------------------------------------
+function FormCard({ game, teams }) {
+    const form = game && game.form;
+    if (!form) return null;
+    const pill = r => (
+        <span className={'form-pill ' + (r === 'W' ? 'pill-w' : 'pill-l')}>{r}</span>
+    );
+    const row = side => {
+        const f = form[side];
+        if (!f) return null;
+        return (
+            <p style={{ marginBottom: '6px' }}>
+                <strong>{side === 'home' ? teams.home.abbr : teams.away.abbr}:</strong>{' '}
+                {f.results.map((r, i) => <span key={i}>{pill(r)}</span>)}
+                <span style={{ color: '#888', marginLeft: '6px' }}>
+                    ({f.wins}-{f.losses})</span>
+            </p>
+        );
+    };
+    return (
+        <div className="stat-card">
+            <h3><i className="fas fa-clipboard-list"></i> Recent form (last 5)</h3>
+            {row('home')}{row('away')}
+            {game.season_series &&
+                <p style={{ color: '#888', fontSize: '0.85rem', marginTop: '8px' }}>
+                    {game.season_series.title}: {game.season_series.summary}</p>}
+        </div>
+    );
+}
+
+// ---- History trend (win prob, odds, mood across runs) --------------------
+function HistoryChart({ history, teams }) {
+    if (!history || history.length < 2) return null;
+    const data = history.map((h, i) => ({
+        i: i + 1,
+        'Ensemble (home)': h.ens_home != null ? +(h.ens_home * 100).toFixed(1) : null,
+        'Market (home)': h.market_home != null ? +(h.market_home * 100).toFixed(1) : null,
+        'Clinch': h.clinch != null ? +(h.clinch * 100).toFixed(1) : null,
+    }));
+    return (
+        <div className="chart-container">
+            <h2><i className="fas fa-chart-line"></i> Movement across runs ({teams.home.abbr} win % &amp; clinch)</h2>
+            <ResponsiveContainer width="100%" height={260}>
+                <LineChart data={data}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="i" /><YAxis domain={[0, 100]} />
+                    <Tooltip /> <Legend />
+                    <Line type="monotone" dataKey="Ensemble (home)" stroke={ink()} strokeWidth={2.5} dot={false} />
+                    <Line type="monotone" dataKey="Market (home)" stroke={awayTone()} strokeWidth={2} strokeDasharray="6 3" dot={false} />
+                    <Line type="monotone" dataKey="Clinch" stroke={awayTone()} strokeWidth={2} strokeDasharray="2 3" dot={false} />
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+// ---- Live tab -------------------------------------------------------------
+function LiveTab({ live }) {
+    if (!live) {
+        return <div className="stat-card"><h3>Live mode</h3>
+            <p>No live data yet. During the game, run
+            <code> python3 -m backend.run live </code> to populate this view.</p></div>;
+    }
+    const L = live.live || {};
+    const g = live.game || {};
+    const run = L.current_run || {};
+    const scoreTl = (L.score_timeline || []).map((s, i) => ({
+        i, [g.home ? g.home.abbr : 'home']: s.home,
+        [g.away ? g.away.abbr : 'away']: s.away }));
+    return (
+        <div>
+            {(live.alerts || []).map((a, i) => (
+                <div key={i} className={'alert-banner alert-' + a.severity}>
+                    <i className="fas fa-bolt"></i> {a.text}
+                </div>
+            ))}
+            <div className="match-header">
+                <div className="team-block">
+                    <div>{g.home ? g.home.name : 'Home'}</div>
+                    <div className="live-score">{g.home ? g.home.score : '-'}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                    <div className="vs">{g.detail || g.state}</div>
+                    <div className="pill" style={{ background: ink(), color: paper(),
+                        borderColor: ink() }}>
+                        {live.mode === 'live' ? 'LIVE' : live.mode}</div>
+                </div>
+                <div className="team-block">
+                    <div>{g.away ? g.away.name : 'Away'}</div>
+                    <div className="live-score">{g.away ? g.away.score : '-'}</div>
+                </div>
+            </div>
+            {L.win_probability && (
+                <div className="chart-container">
+                    <h2>Live win probability</h2>
+                    <div className="prob-bar">
+                        <div className="prob-home" style={{ width: fmtPct(L.win_probability.home) }}>
+                            {g.home ? g.home.abbr : 'H'} {fmtPct(L.win_probability.home)}</div>
+                        <div className="prob-away" style={{ width: fmtPct(L.win_probability.away) }}>
+                            {fmtPct(L.win_probability.away)} {g.away ? g.away.abbr : 'A'}</div>
+                    </div>
+                    <p style={{ color: '#888' }}>
+                        from current margin + time remaining (pre-game prior
+                        {' ' + fmtPct(L.win_probability.pregame_home)} {g.home ? g.home.abbr : 'home'})
+                    </p>
+                </div>
+            )}
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <h3>Current Run</h3>
+                    <div style={{ textAlign: 'center' }}>
+                        <span className="big-number">{run.points || 0}-0</span>
+                        <div>{run.team || '—'}</div>
+                    </div>
+                </div>
+                <div className="stat-card">
+                    <h3>Momentum</h3>
+                    <Meter label={(L.momentum > 0 ? (g.home && g.home.abbr) : (g.away && g.away.abbr)) + ' favored'}
+                        value={Math.abs(L.momentum || 0) * 100} kind="heat" />
+                    <p style={{ color: '#888' }}>signed: {(L.momentum || 0).toFixed(2)}</p>
+                </div>
+                <div className="stat-card">
+                    <h3>Sentiment Spike</h3>
+                    <div style={{ textAlign: 'center' }}>
+                        <span className="big-number" style={{ color: ink() }}>
+                            {(L.sentiment_spike || 0) < 0 ? '▼' : '▲'} {Math.abs(L.sentiment_spike || 0).toFixed(1)}σ</span>
+                        <div>{(L.sentiment_spike || 0) <= -1.5 ? 'panic' :
+                            (L.sentiment_spike || 0) >= 1.5 ? 'hype surge' : 'stable'}</div>
+                    </div>
+                </div>
+            </div>
+            {L.mood && (
+                <div className="stat-card" style={{ marginBottom: '18px' }}>
+                    <h3>Live Mood</h3>
+                    <Meter label="Heat" value={L.mood.heat} kind="heat" />
+                    <Meter label="Hype" value={L.mood.hype} kind="hype" />
+                    <Meter label="Toxicity" value={L.mood.toxicity} kind="toxicity" />
+                </div>
+            )}
+            {scoreTl.length > 1 && (
+                <div className="chart-container">
+                    <h2>Score progression</h2>
+                    <ResponsiveContainer width="100%" height={260}>
+                        <LineChart data={scoreTl}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="i" /><YAxis />
+                            <Tooltip /> <Legend />
+                            <Line type="monotone" dataKey={g.home ? g.home.abbr : 'home'}
+                                stroke={ink()} strokeWidth={2.5} dot={false} />
+                            <Line type="monotone" dataKey={g.away ? g.away.abbr : 'away'}
+                                stroke={awayTone()} strokeWidth={2.5} strokeDasharray="6 3" dot={false} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+            {(L.recent_events || []).length > 0 && (
+                <div className="stat-card">
+                    <h3>Recent plays</h3>
+                    {L.recent_events.slice().reverse().map((e, i) => (
+                        <p key={i} style={{ fontSize: '0.9rem' }}>
+                            <strong>Q{e.period} {e.clock}</strong> · {e.team} · {e.desc}</p>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ---------------------------------------------------------------------------
+// NEW TABS (added in v2): Sources / Lineups / Odds / Categories / Math /
+// Sofascore. Each one consumes the new pipeline blocks; everything is null-safe
+// so the dashboard still renders if a source was down on the last snapshot.
+// ---------------------------------------------------------------------------
+function SourcesTab({ snap }) {
+    const health = snap.source_health || {};
+    const sources = (health.by_source || []).slice().sort((a, b) =>
+        a.status.localeCompare(b.status) || a.name.localeCompare(b.name));
+    const counts = health.counts || {};
+    return (
+        <div>
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <h3>Uptime</h3>
+                    <div className="big-number">{health.uptime_pct ?? 0}%</div>
+                    <div style={{ color: mute(), marginTop: 6 }}>
+                        ok={counts.ok || 0} · partial={counts.partial || 0} · error={counts.error || 0}
+                    </div>
+                </div>
+                <div className="stat-card">
+                    <h3>Sources configured</h3>
+                    <div className="big-number">{sources.length}</div>
+                </div>
+            </div>
+            <div className="chart-container">
+                <h2>Source health grid</h2>
+                <table>
+                    <thead>
+                        <tr><th>Source</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                        {sources.map(s => (
+                            <tr key={s.name}>
+                                <td>{s.name}</td>
+                                <td>
+                                    <span className={'source-chip src-' + s.status}>
+                                        {s.status}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            <div className="chart-container">
+                <h2>Score consensus</h2>
+                <p style={{ fontFamily: 'var(--mono)' }}>
+                    Sources reporting: {(snap.scores_unified || {}).n_sources || 0} ·
+                    consensus: HOME {(snap.scores_unified || {}).consensus_home ?? '?'} —
+                    AWAY {(snap.scores_unified || {}).consensus_away ?? '?'} ·
+                    max disagreement: {(snap.scores_unified || {}).max_disagreement ?? 0}
+                </p>
+                <table>
+                    <thead><tr><th>Source</th><th>Side</th><th>Score</th></tr></thead>
+                    <tbody>
+                        {((snap.scores_unified || {}).home_scores || []).map((p, i) =>
+                            <tr key={'h' + i}><td>{p[0]}</td><td>HOME</td><td>{p[1]}</td></tr>)}
+                        {((snap.scores_unified || {}).away_scores || []).map((p, i) =>
+                            <tr key={'a' + i}><td>{p[0]}</td><td>AWAY</td><td>{p[1]}</td></tr>)}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
+
+function LineupsTab({ snap }) {
+    const L = snap.lineups_unified;
+    const meta = snap.lineup_meta || {};
+    if (!L) {
+        return <div className="chart-container"><h2>Lineups</h2>
+            <p>No lineup data yet — Sofascore typically publishes ~1 hour before tip-off.</p>
+        </div>;
+    }
+    const renderSide = (side, label) => (
+        <div className="stat-card" style={{ flex: 1 }}>
+            <h3>{label}{side?.formation ? ' · ' + side.formation : ''}</h3>
+            <div style={{ marginBottom: 10, color: mute() }}>STARTERS</div>
+            {(side?.starters || []).map((p, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between',
+                    fontFamily: 'var(--mono)', padding: '4px 0' }}>
+                    <span><b>{p.jersey || ''}</b> {p.name}</span>
+                    <span style={{ color: mute() }}>{p.position}</span>
+                </div>
+            ))}
+            <div style={{ margin: '10px 0 6px', color: mute() }}>BENCH</div>
+            {(side?.bench || []).slice(0, 8).map((p, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between',
+                    fontFamily: 'var(--mono)', padding: '3px 0', fontSize: '0.85rem' }}>
+                    <span>{p.name}</span>
+                    <span style={{ color: mute() }}>{p.position}</span>
+                </div>
+            ))}
+            {(side?.missing || []).length > 0 && (
+                <>
+                    <div style={{ margin: '10px 0 6px', color: mute() }}>MISSING</div>
+                    {side.missing.map((m, i) => (
+                        <div key={i} style={{ fontFamily: 'var(--mono)', fontSize: '0.82rem',
+                            padding: '2px 0' }}>
+                            <b>{m.name}</b> — {m.type} · {m.reason}
+                        </div>
+                    ))}
+                </>
+            )}
+        </div>
+    );
+    return (
+        <div>
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <h3>Starting value (home)</h3>
+                    <div className="big-number">
+                        {((meta.starting_advantage || {}).home_starting_value || 0).toFixed(3)}
+                    </div>
+                </div>
+                <div className="stat-card">
+                    <h3>Starting value (away)</h3>
+                    <div className="big-number">
+                        {((meta.starting_advantage || {}).away_starting_value || 0).toFixed(3)}
+                    </div>
+                </div>
+                <div className="stat-card">
+                    <h3>Net advantage (home)</h3>
+                    <div className="big-number">
+                        {((meta.starting_advantage || {}).net_advantage_home || 0).toFixed(3)}
+                    </div>
+                </div>
+            </div>
+            <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
+                {renderSide(L.home, snap.teams.home.name)}
+                {renderSide(L.away, snap.teams.away.name)}
+            </div>
+        </div>
+    );
+}
+
+function OddsTab({ snap }) {
+    const odds = snap.odds_unified || { books: [] };
+    return (
+        <div className="chart-container">
+            <h2>Multi-book odds ({odds.count || 0} books)</h2>
+            <table>
+                <thead>
+                    <tr><th>Provider</th><th>Home ML</th><th>Away ML</th>
+                        <th>Home dec.</th><th>Away dec.</th><th>Spread</th><th>O/U</th></tr>
+                </thead>
+                <tbody>
+                    {(odds.books || []).map((b, i) => (
+                        <tr key={i}>
+                            <td><b>{b.provider}</b></td>
+                            <td>{b.home_moneyline ?? '—'}</td>
+                            <td>{b.away_moneyline ?? '—'}</td>
+                            <td>{b.home_decimal ?? '—'}</td>
+                            <td>{b.away_decimal ?? '—'}</td>
+                            <td>{b.spread ?? '—'}</td>
+                            <td>{b.over_under ?? '—'}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+}
+
+function CategoriesTab({ snap }) {
+    const cats = (snap.categories || {}).categories || [];
+    const [active, setActive] = React.useState('all');
+    const items = (snap.press_review || []).filter(a => {
+        if (active === 'all') return true;
+        return a.category === active;
+    }).slice(0, 40);
+    return (
+        <div>
+            <div className="chart-container">
+                <h2>Category mix · total {(snap.categories || {}).total || 0}</h2>
+                <ResponsiveContainer width="100%" height={260}>
+                    <BarChart data={cats}>
+                        <CartesianGrid stroke={mute()} strokeDasharray="3 3" />
+                        <XAxis dataKey="category" stroke={ink()} />
+                        <YAxis stroke={ink()} />
+                        <Tooltip />
+                        <Bar dataKey="count" fill={ink()} />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+            <div className="filters">
+                <button className={'tab ' + (active === 'all' ? 'active' : '')}
+                    onClick={() => setActive('all')}>ALL</button>
+                {cats.map(c => (
+                    <button key={c.category}
+                        className={'tab ' + (active === c.category ? 'active' : '')}
+                        onClick={() => setActive(c.category)}>
+                        {c.category.toUpperCase()} ({c.count})
+                    </button>
+                ))}
+            </div>
+            <div>
+                {items.map((a, i) => (
+                    <div key={i} className="article">
+                        <a href={a.url} target="_blank" rel="noreferrer">{a.title}</a>
+                        <div className="article-meta">
+                            <span className="badge">{a.category}</span>
+                            <span>{a.source}</span>
+                            <span>{fmtDate(a.published)}</span>
+                            <span className="sent-badge"
+                                style={{ background: sentimentColor(a.sentiment?.compound) }}>
+                                {((a.sentiment?.compound || 0) > 0 ? '+' : '') +
+                                    (a.sentiment?.compound || 0).toFixed(2)}
+                            </span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function MathTab({ snap }) {
+    const adv = snap.advanced || {};
+    const mc = adv.monte_carlo_game || {};
+    const mcs = adv.monte_carlo_series || {};
+    const glk = adv.glicko || {};
+    const kel = adv.kelly;
+    const inj = adv.injuries || {};
+    const hm = adv.history_movement || {};
+    return (
+        <div className="stats-grid">
+            <div className="stat-card">
+                <h3>Monte Carlo (game)</h3>
+                <p>Trials: <b>{mc.trials}</b></p>
+                <p>Sim home WP: <b>{((mc.home_win_prob_sim || 0) * 100).toFixed(2)}%</b></p>
+                <p>Margin p10 / p50 / p90:
+                    <b> {mc.p10_margin} / {mc.median_margin} / {mc.p90_margin}</b></p>
+                <p>Std margin: <b>{mc.stdev_margin}</b></p>
+            </div>
+            <div className="stat-card">
+                <h3>Monte Carlo (series)</h3>
+                <p>Clinch: <b>{((mcs.leader_clinch_prob || 0) * 100).toFixed(2)}%</b></p>
+                <p>Expected games: <b>{mcs.expected_games}</b></p>
+                {mcs.ends_in && (
+                    <ul style={{ marginLeft: 18 }}>
+                        {Object.keys(mcs.ends_in).map(g =>
+                            <li key={g}>G{g}: {(mcs.ends_in[g] * 100).toFixed(1)}%</li>)}
+                    </ul>
+                )}
+            </div>
+            <div className="stat-card">
+                <h3>Glicko-2</h3>
+                <p>Home rating: <b>{glk.home_rating}</b> RD={glk.home_rd}</p>
+                <p>Away rating: <b>{glk.away_rating}</b> RD={glk.away_rd}</p>
+                <p>P(home wins): <b>{((glk.home_win_prob || 0) * 100).toFixed(2)}%</b></p>
+            </div>
+            <div className="stat-card">
+                <h3>Kelly criterion</h3>
+                {kel ? <>
+                    <p>Side: <b>{kel.side?.toUpperCase()}</b></p>
+                    <p>Decimal: <b>{kel.decimal}</b></p>
+                    <p>Full Kelly: <b>{((kel.full || 0) * 100).toFixed(2)}%</b></p>
+                    <p>1/4 Kelly: <b>{((kel.quarter || 0) * 100).toFixed(2)}%</b></p>
+                    <p>EV: <b>{((kel.ev || 0) * 100).toFixed(2)}%</b></p>
+                </> : <p>No value bet detected.</p>}
+            </div>
+            <div className="stat-card">
+                <h3>Injury impact</h3>
+                <p>Home share lost: <b>{((inj.home || 0) * 100).toFixed(1)}%</b></p>
+                <p>Away share lost: <b>{((inj.away || 0) * 100).toFixed(1)}%</b></p>
+                <p>Adjusted home WP:
+                    <b> {(((inj.adjustment || {}).adjusted_prob || 0) * 100).toFixed(2)}%</b></p>
+                <p>Delta: <b>{(((inj.adjustment || {}).delta || 0) * 100).toFixed(2)} pp</b></p>
+            </div>
+            <div className="stat-card">
+                <h3>History time series</h3>
+                <p>Drift / run: <b>{hm.ens_drift_per_run}</b></p>
+                <p>R²: <b>{hm.ens_r2}</b></p>
+                <p>Autocorr lag-1: <b>{hm.ens_autocorr_lag1}</b></p>
+                <p>Pearson vs market: <b>{hm.pearson_ens_vs_market}</b></p>
+                <p>Pearson vs sentiment: <b>{hm.pearson_ens_vs_sentiment}</b></p>
+            </div>
+        </div>
+    );
+}
+
+function SofascoreTab({ snap }) {
+    const sf = snap.sofascore || {};
+    const stats = sf.stats?.all || {};
+    const form = sf.form || {};
+    const h2h = sf.h2h || {};
+    const graph = sf.graph || [];
+    const featured = sf.featured || [];
+    const inc = sf.incidents || [];
+    return (
+        <div>
+            <div className="stats-grid">
+                <div className="stat-card">
+                    <h3>Form (recent)</h3>
+                    <div><b>{snap.teams.home.name}</b>: {form.home?.form || '—'}
+                        (W{form.home?.wins || 0}-L{form.home?.losses || 0})</div>
+                    <div><b>{snap.teams.away.name}</b>: {form.away?.form || '—'}
+                        (W{form.away?.wins || 0}-L{form.away?.losses || 0})</div>
+                </div>
+                <div className="stat-card">
+                    <h3>Head-to-head</h3>
+                    <p>Home wins: <b>{h2h.home_wins ?? '—'}</b></p>
+                    <p>Away wins: <b>{h2h.away_wins ?? '—'}</b></p>
+                    <p>Draws: <b>{h2h.draws ?? '—'}</b></p>
+                </div>
+                <div className="stat-card">
+                    <h3>Featured players</h3>
+                    {featured.length === 0 && <p>—</p>}
+                    {featured.map((f, i) =>
+                        <div key={i}>
+                            <b>{f.side?.toUpperCase()}</b>: {f.name}{' '}
+                            <span style={{ color: mute() }}>rating={f.rating ?? '—'}</span>
+                        </div>)}
+                </div>
+            </div>
+            {graph.length > 0 && (
+                <div className="chart-container">
+                    <h2>Minute-by-minute scoring graph</h2>
+                    <ResponsiveContainer width="100%" height={240}>
+                        <LineChart data={graph}>
+                            <CartesianGrid stroke={mute()} strokeDasharray="3 3" />
+                            <XAxis dataKey="minute" stroke={ink()} />
+                            <YAxis stroke={ink()} />
+                            <Tooltip />
+                            <Line dataKey="value" stroke={ink()} dot={false} />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+            {Object.keys(stats).length > 0 && (
+                <div className="chart-container">
+                    <h2>Team statistics (all)</h2>
+                    <table>
+                        <thead><tr><th>Stat</th><th>Home</th><th>Away</th></tr></thead>
+                        <tbody>
+                            {Object.keys(stats).map(k => (
+                                <tr key={k}>
+                                    <td>{k}</td>
+                                    <td>{stats[k]?.home ?? '—'}</td>
+                                    <td>{stats[k]?.away ?? '—'}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+            {inc.length > 0 && (
+                <div className="chart-container">
+                    <h2>Last 20 incidents</h2>
+                    {inc.slice(0, 20).map((e, i) =>
+                        <div key={i} style={{ fontFamily: 'var(--mono)',
+                            fontSize: '0.85rem', padding: '4px 0' }}>
+                            <b>Q{e.period} {e.clock || ''}</b> [{e.team || '?'}]{' '}
+                            {e.text} {e.points ? ` (+${e.points})` : ''}
+                        </div>)}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ---- App ------------------------------------------------------------------
+function App() {
+    const [snap, setSnap] = React.useState(null);
+    const [live, setLive] = React.useState(null);
+    const [tab, setTab] = React.useState('mood');
+    const [dark, setDark] = React.useState(false);
+    const [error, setError] = React.useState(null);
+    CURRENT_DARK = dark;   // theme-aware color helpers read this during render
+
+    const loadSnapshot = React.useCallback(() => {
+        fetch('data/snapshot.json?t=' + Date.now())
+            .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+            .then(d => { setSnap(d); setError(null); })
+            .catch(e => setError(e.message));
+    }, []);
+    const loadLive = React.useCallback(() => {
+        fetch('data/live.json?t=' + Date.now())
+            .then(r => r.ok ? r.json() : null)
+            .then(d => setLive(d)).catch(() => {});
+    }, []);
+
+    React.useEffect(() => {
+        loadSnapshot(); loadLive();
+        const s = setInterval(loadSnapshot, SNAPSHOT_REFRESH_MS);
+        const l = setInterval(loadLive, LIVE_REFRESH_MS);
+        return () => { clearInterval(s); clearInterval(l); };
+    }, [loadSnapshot, loadLive]);
+
+    React.useEffect(() => {
+        document.body.classList.toggle('dark-mode', dark);
+    }, [dark]);
+
+    const isLive = live && live.mode === 'live';
+    React.useEffect(() => { if (isLive) setTab('live'); }, [isLive]);
+
+    if (error && !snap) {
+        return (
+            <div className="App">
+                <div className="header"><h1>NBA Mood Mirror</h1></div>
+                <div className="error-box">
+                    <h3><i className="fas fa-exclamation-triangle"></i> Could not load data</h3>
+                    <p>{error}. Generate it and serve over HTTP (not file://):</p>
+                    <p><code>python3 -m backend.run snapshot</code></p>
+                    <p><code>python3 -m http.server 8000</code> → open
+                        <code> http://localhost:8000/</code></p>
+                </div>
+            </div>
+        );
+    }
+    if (!snap) {
+        return <div className="App"><div className="loading-container">
+            <div className="loading-spinner"></div><p>Loading mood data…</p></div></div>;
+    }
+
+    const home = snap.teams.home, away = snap.teams.away;
+    return (
+        <div className="App">
+            <div className="header">
+                <h1>NBA Mood Mirror &amp; Press Review</h1>
+                <p>Sentiment, press review and prediction for {away.name} @ {home.name}</p>
+                <div className="toolbar">
+                    <span className="pill">{snap.label}</span>
+                    <span className="pill">Series: {snap.series.leader} {snap.series.lead}</span>
+                    <span className="pill">Mode: {snap.mode}{isLive ? ' (LIVE)' : ''}</span>
+                    <label className="switch" title="Invert theme">
+                        <input type="checkbox" checked={dark}
+                            onChange={() => setDark(!dark)} />
+                        <span className="slider"></span>
+                    </label>
+                    <span className="pill" style={{ border: 'none' }}>
+                        {dark ? 'INVERTED' : 'INVERT'}</span>
+                </div>
+            </div>
+
+            <div className="match-header">
+                <div className="match-teams">
+                    <div className="team-block">
+                        <div className="team-logo logo-home">{home.abbr}</div>
+                        <div>{home.name}</div>
+                        {snap.game && <div className="team-score">{snap.game.home.score}</div>}
+                    </div>
+                    <div className="vs">vs</div>
+                    <div className="team-block">
+                        <div className="team-logo logo-away">{away.abbr}</div>
+                        <div>{away.name}</div>
+                        {snap.game && <div className="team-score">{snap.game.away.score}</div>}
+                    </div>
+                </div>
+                <div className="match-info">
+                    <div className="match-date">{snap.game ? snap.game.detail : ''}</div>
+                    <div>{snap.venue}</div>
+                    <SourceChips sources={snap.sources} />
+                </div>
+            </div>
+
+            <div className="tabs" style={{ flexWrap: 'wrap' }}>
+                {[['mood', 'Mood'], ['press', 'Press'], ['categories', 'Categories'],
+                  ['prediction', 'Prediction'], ['math', 'Math'],
+                  ['lineups', 'Lineups'], ['odds', 'Odds'],
+                  ['sofascore', 'Sofascore'], ['live', 'Live'],
+                  ['sources', 'Sources']].map(([k, lbl]) => (
+                    <button key={k} className={'tab ' + (tab === k ? 'active' : '')}
+                        onClick={() => setTab(k)}>
+                        {lbl}{k === 'live' && isLive && <span className="badge-dot"></span>}
+                    </button>
+                ))}
+            </div>
+
+            <div className={'tab-content ' + (tab === 'mood' ? 'active' : '')}>
+                <MoodTab snap={snap} /></div>
+            <div className={'tab-content ' + (tab === 'press' ? 'active' : '')}>
+                <PressTab snap={snap} /></div>
+            <div className={'tab-content ' + (tab === 'categories' ? 'active' : '')}>
+                <CategoriesTab snap={snap} /></div>
+            <div className={'tab-content ' + (tab === 'prediction' ? 'active' : '')}>
+                <PredictionTab snap={snap} /></div>
+            <div className={'tab-content ' + (tab === 'math' ? 'active' : '')}>
+                <MathTab snap={snap} /></div>
+            <div className={'tab-content ' + (tab === 'lineups' ? 'active' : '')}>
+                <LineupsTab snap={snap} /></div>
+            <div className={'tab-content ' + (tab === 'odds' ? 'active' : '')}>
+                <OddsTab snap={snap} /></div>
+            <div className={'tab-content ' + (tab === 'sofascore' ? 'active' : '')}>
+                <SofascoreTab snap={snap} /></div>
+            <div className={'tab-content ' + (tab === 'live' ? 'active' : '')}>
+                <LiveTab live={live} /></div>
+            <div className={'tab-content ' + (tab === 'sources' ? 'active' : '')}>
+                <SourcesTab snap={snap} /></div>
+
+            <p style={{ textAlign: 'center', color: '#999', marginTop: '24px',
+                fontSize: '0.82rem' }}>
+                Generated {fmtDate(snap.generated_at)} · free/keyless sources only ·
+                auto-refresh on
+            </p>
+        </div>
+    );
+}
+ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

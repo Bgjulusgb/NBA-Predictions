@@ -1,0 +1,38 @@
+# PEP 621 metadata. No build dependencies because the package is stdlib-only.
+# Tested against Python 3.11.9; should run on 3.8+ but the v2 modules use the
+# `dict | None` union syntax (PEP 604) which needs 3.10+.
+
+[build-system]
+requires = []
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nba-mood-mirror"
+version = "2.0.0"
+description = "Free, keyless NBA sentiment + prediction backend with multi-source scraping."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "NBA Mood Mirror" }
+]
+license = { text = "MIT" }
+keywords = ["nba", "sentiment-analysis", "sports-analytics", "web-scraping",
+            "python", "react", "monte-carlo", "elo", "glicko", "sofascore"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: MIT License",
+]
+dependencies = []  # stdlib only
+
+[project.scripts]
+nba-mood-mirror = "backend.run:main"
+
+[project.urls]
+Repository = "https://github.com/Bgjulusgb/Footballpredicter"
+
+[tool.setuptools.packages.find]
+include = ["backend*"]
